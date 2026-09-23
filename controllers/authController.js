@@ -11,6 +11,7 @@ const generateToken = (id, tenantId, role) => {
 
 // @desc    Register new Tenant (Organization) + Org Admin User
 // @route   POST /api/auth/register-tenant
+// @access  Public
 const registerTenant = async (req, res) => {
   try {
     const body = req.body || {};
@@ -79,6 +80,7 @@ const registerTenant = async (req, res) => {
 
 // @desc    Login User
 // @route   POST /api/auth/login
+// @access  Public
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -116,4 +118,26 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerTenant, loginUser };
+// @desc    Get currently logged-in user profile
+// @route   GET /api/auth/me
+// @access  Private
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate('tenantId', 'name slug email phone subscriptionStatus');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerTenant, loginUser, getMe };
