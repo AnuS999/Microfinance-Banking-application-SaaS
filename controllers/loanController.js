@@ -234,4 +234,5 @@ const repayInstallment = async (req, res) => {
   }
 };
 
+
 module.exports = { applyForLoan, getLoans, getLoanById, approveLoan, disburseLoan, repayInstallment };

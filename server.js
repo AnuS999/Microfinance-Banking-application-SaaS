@@ -20,6 +20,7 @@ const authRoutes = require('./routes/authRoutes');
 const borrowerRoutes = require('./routes/borrowerRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const loanRoutes = require('./routes/loanRoutes');
+app.use('/api/auth', require('./routes/authRoutes'));
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);
