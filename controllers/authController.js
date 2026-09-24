@@ -1,69 +1,105 @@
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-const register = async (req, res) => {
-  try {
-    const { name, email } = req.body;
+// Helper function to generate JWT token
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret_key_12345', {
+    expiresIn: '7d',
+  });
+};
 
-    if (!email || !name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name and Email are required',
+// @desc    Register a new user
+// @route   POST /api/auth/register
+exports.registerUser = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    // Check if required fields are present
+    if (!name || !email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide all required fields (name, email, password)' 
       });
     }
 
-    const newUserPayload = {
-      _id: '6ab2c9aab69cd8a5cedf3a59',
-      name: name || 'Anurodh Singh',
-      email,
-      tenantId: 'DEFAULT',
-      role: 'ORG_ADMIN',
-    };
-
-    const secretKey = process.env.JWT_SECRET || 'super_secret_jwt_key_2026';
-    const token = jwt.sign(newUserPayload, secretKey, { expiresIn: '7d' });
-
-    return res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      token,
-      user: newUserPayload,
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-const login = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User already exists with this email' 
+      });
     }
 
-    const userPayload = {
-      _id: '6ab2c9aab69cd8a5cedf3a59',
-      name: 'Anurodh Singh',
-      email: 'anurodhsingh955@gmail.com',
-      tenantId: 'DEFAULT',
-      role: 'ORG_ADMIN',
-    };
+    // Create new user (password hashing is handled via mongoose pre-save middleware)
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: role || 'AGENT',
+    });
 
-    const secretKey = process.env.JWT_SECRET || 'super_secret_jwt_key_2026';
-    const token = jwt.sign(userPayload, secretKey, { expiresIn: '7d' });
+    // Generate JWT token
+    const token = generateToken(user._id, user.role);
 
-    return res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: 'Login successful',
-      token,
-      user: userPayload,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token,
+      },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('Registration Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Server error during registration' 
+    });
   }
 };
 
-module.exports = {
-  register,
-  login,
+// @desc    Login user & get token
+// @route   POST /api/auth/login
+exports.loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide email and password' 
+      });
+    }
+
+    // Find user and explicitly select password field
+    const user = await User.findOne({ email }).select('+password');
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password' 
+      });
+    }
+
+    const token = generateToken(user._id, user.role);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token,
+      },
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Server error during login' 
+    });
+  }
 };

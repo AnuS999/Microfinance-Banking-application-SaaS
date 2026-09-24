@@ -31,6 +31,68 @@ const generateAmortization = (principal, annualRate, months) => {
   return schedule;
 };
 
+// Agent requests collection
+exports.requestCollection = async (req, res) => {
+  try {
+    const { loanId, period } = req.body;
+    const loan = await Loan.findById(loanId);
+    if (!loan) return res.status(404).json({ success: false, message: 'Loan not found' });
+
+    const scheduleItem = loan.schedule.find(s => s.period === period);
+    if (!scheduleItem) return res.status(404).json({ success: false, message: 'Period not found' });
+
+    scheduleItem.status = 'PENDING_APPROVAL';
+    scheduleItem.collectedBy = req.user._id; // Logged in agent ID from auth middleware
+
+    await loan.save();
+    res.status(200).json({ success: true, data: loan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Admin approves collection
+exports.approveCollection = async (req, res) => {
+  try {
+    const { loanId, period } = req.body;
+    const loan = await Loan.findById(loanId);
+    if (!loan) return res.status(404).json({ success: false, message: 'Loan not found' });
+
+    const scheduleItem = loan.schedule.find(s => s.period === period);
+    if (!scheduleItem) return res.status(404).json({ success: false, message: 'Period not found' });
+
+    const now = new Date();
+    scheduleItem.status = 'COLLECTED';
+    scheduleItem.collectedAt = now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+    await loan.save();
+    res.status(200).json({ success: true, data: loan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Admin rejects collection (Reverts to PENDING)
+exports.rejectCollection = async (req, res) => {
+  try {
+    const { loanId, period } = req.body;
+    const loan = await Loan.findById(loanId);
+    if (!loan) return res.status(404).json({ success: false, message: 'Loan not found' });
+
+    const scheduleItem = loan.schedule.find(s => s.period === period);
+    if (!scheduleItem) return res.status(404).json({ success: false, message: 'Period not found' });
+
+    scheduleItem.status = 'PENDING';
+    scheduleItem.collectedAt = null;
+    scheduleItem.collectedBy = null;
+
+    await loan.save();
+    res.status(200).json({ success: true, data: loan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // 1. Disburse New Loan
 exports.disburseLoan = async (req, res, next) => {
   try {

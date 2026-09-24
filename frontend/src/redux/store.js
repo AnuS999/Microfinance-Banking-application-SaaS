@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import itemReducer from './slices/itemSlice';
-import loanReducer from './slices/loanSlice';
 import borrowerReducer from './slices/borrowerSlice';
+import loanReducer from './slices/loanSlice';
+import authReducer from './slices/authSlice';
 
 export const store = configureStore({
   reducer: {
     items: itemReducer,
-    loans: loanReducer,
     borrowers: borrowerReducer,
+    loans: loanReducer,
+    auth: authReducer,
   },
 });
