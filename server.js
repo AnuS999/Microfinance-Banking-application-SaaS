@@ -2,7 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const Item = require('./models/Item'); // Mongoose Item Model import karein
+const Item = require('./models/Item');
 
 dotenv.config();
 
@@ -73,17 +73,19 @@ app.delete('/api/items/:id', async (req, res, next) => {
 });
 
 // ==========================================
-// OTHER FEATURE ROUTES
+// API FEATURE ROUTES
 // ==========================================
 const authRoutes = require('./routes/authRoutes');
 const borrowerRoutes = require('./routes/borrowerRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const loanRoutes = require('./routes/loanRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes'); // <-- Clean Import
 
 app.use('/api/auth', authRoutes);
 app.use('/api/borrowers', borrowerRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/loans', loanRoutes);
+app.use('/api/analytics', analyticsRoutes); // <-- Mount correctly with other routes
 
 // Health Check Route
 app.get('/', (req, res) => {
