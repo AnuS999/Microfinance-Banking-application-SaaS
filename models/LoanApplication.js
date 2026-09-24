@@ -1,11 +1,28 @@
 const mongoose = require('mongoose');
 
+const repaymentSchema = new mongoose.Schema({
+  installmentNumber: Number,
+  dueDate: Date,
+  principalComponent: Number,
+  interestComponent: Number,
+  totalInstallmentAmount: Number,
+  status: {
+    type: String,
+    enum: ['PENDING', 'PAID', 'OVERDUE'],
+    default: 'PENDING',
+  },
+  paidAt: Date,
+  paymentMode: String,
+  transactionRef: String,
+});
+
 const loanApplicationSchema = new mongoose.Schema(
   {
     tenantId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'Organization',
       required: true,
+      default: 'DEFAULT',
       index: true,
     },
     borrowerId: {
@@ -16,7 +33,8 @@ const loanApplicationSchema = new mongoose.Schema(
     schemeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'LoanScheme',
-      required: true,
+      required: false, // General/Custom loans ke liye optional
+      default: null,
     },
     requestedAmount: {
       type: Number,
@@ -44,31 +62,18 @@ const loanApplicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['PENDING', 'APPROVED', 'REJECTED', 'DISBURSED', 'CLOSED'],
+      enum: ['PENDING', 'APPROVED', 'REJECTED', 'DISBURSED', 'REPAID', 'CLOSED'],
       default: 'PENDING',
     },
-    repaymentSchedule: [
-      {
-        installmentNumber: Number,
-        dueDate: Date,
-        principalComponent: Number,
-        interestComponent: Number,
-        totalInstallmentAmount: Number,
-        status: {
-          type: String,
-          enum: ['PENDING', 'PAID', 'OVERDUE'],
-          default: 'PENDING',
-        },
-      },
-    ],
+    repaymentSchedule: [repaymentSchema],
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String, // String representation for fallback stability
       required: true,
+      default: '6ab2c9aab69cd8a5cedf3a59',
     },
     approvedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
+      default: null,
     },
     disbursedAt: {
       type: Date,

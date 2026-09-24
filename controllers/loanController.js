@@ -1,238 +1,93 @@
-const LoanApplication = require('../models/LoanApplication');
-const LoanScheme = require('../models/LoanScheme');
-const Borrower = require('../models/Borrower');
+const Loan = require('../models/Loan');
 
-const calculateSchedule = (amount, rate, months) => {
-  const totalInterest = (amount * rate * (months / 12)) / 100;
-  const totalPayable = amount + totalInterest;
-  const monthlyInstallment = totalPayable / months;
+// Helper to calculate Reducing Balance Amortization
+const generateAmortization = (principal, annualRate, months) => {
+  const monthlyRate = annualRate / 12 / 100;
+  const emi =
+    (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+    (Math.pow(1 + monthlyRate, months) - 1);
 
-  const monthlyPrincipal = amount / months;
-  const monthlyInterest = totalInterest / months;
-
+  let balance = principal;
   const schedule = [];
-  const today = new Date();
+  let currentDate = new Date();
 
   for (let i = 1; i <= months; i++) {
-    const dueDate = new Date(today);
-    dueDate.setMonth(today.getMonth() + i);
+    const interest = balance * monthlyRate;
+    const principalPaid = emi - interest;
+    balance = Math.max(0, balance - principalPaid);
+    
+    currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
 
     schedule.push({
-      installmentNumber: i,
-      dueDate,
-      principalComponent: Math.round(monthlyPrincipal),
-      interestComponent: Math.round(monthlyInterest),
-      totalInstallmentAmount: Math.round(monthlyInstallment),
+      installmentNo: i,
+      dueDate: new Date(currentDate),
+      principalComponent: Math.round(principalPaid),
+      interestComponent: Math.round(interest),
+      totalPayment: Math.round(emi),
+      remainingBalance: Math.round(balance),
       status: 'PENDING',
     });
   }
-
-  return { totalInterest, totalPayable, schedule };
+  return schedule;
 };
 
-// @desc    Apply for a new Loan
-// @route   POST /api/loans
-// @access  Private (ORG_ADMIN, LOAN_OFFICER)
-const applyForLoan = async (req, res) => {
+// 1. Disburse New Loan
+exports.disburseLoan = async (req, res, next) => {
   try {
-    const { borrowerId, schemeId, loanAmount, requestedAmount, tenorMonths } = req.body;
-    const finalAmount = requestedAmount || loanAmount;
+    const { borrowerId, principalAmount, annualInterestRate, tenureMonths } = req.body;
 
-    if (!finalAmount) {
-      return res.status(400).json({ message: 'Please specify requested loan amount' });
-    }
-
-    const borrower = await Borrower.findOne({ _id: borrowerId, tenantId: req.user.tenantId });
-    if (!borrower) {
-      return res.status(404).json({ message: 'Borrower not found in your organization' });
-    }
-
-    const scheme = await LoanScheme.findOne({ _id: schemeId, tenantId: req.user.tenantId, isActive: true });
-    if (!scheme) {
-      return res.status(404).json({ message: 'Loan scheme not found or inactive' });
-    }
-
-    if (finalAmount < scheme.minAmount || finalAmount > scheme.maxAmount) {
-      return res.status(400).json({
-        message: `Loan amount must be between ${scheme.minAmount} and ${scheme.maxAmount}`,
-      });
-    }
-
-    if (tenorMonths < scheme.minTenorMonths || tenorMonths > scheme.maxTenorMonths) {
-      return res.status(400).json({
-        message: `Tenor must be between ${scheme.minTenorMonths} and ${scheme.maxTenorMonths} months`,
-      });
-    }
-
-    const processingFee = (finalAmount * scheme.processingFeePercent) / 100;
-    const { totalInterest, totalPayable, schedule } = calculateSchedule(
-      finalAmount,
-      scheme.interestRate,
-      tenorMonths
+    const schedule = generateAmortization(
+      Number(principalAmount),
+      Number(annualInterestRate),
+      Number(tenureMonths)
     );
 
-    const loanApplication = await LoanApplication.create({
-      tenantId: req.user.tenantId,
-      borrowerId,
-      schemeId,
-      requestedAmount: finalAmount,
-      tenorMonths,
-      interestRate: scheme.interestRate,
-      totalInterest,
-      processingFee,
-      totalAmountPayable: totalPayable,
-      repaymentSchedule: schedule,
-      createdBy: req.user.id,
+    const loan = await Loan.create({
+      borrower: borrowerId,
+      principalAmount,
+      annualInterestRate,
+      tenureMonths,
+      schedule,
     });
 
-    res.status(201).json({ success: true, data: loanApplication });
+    res.status(201).json({ success: true, data: loan });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// @desc    Get all Loan Applications for Tenant
-// @route   GET /api/loans
-// @access  Private
-const getLoans = async (req, res) => {
+// 2. Fetch Active Loans with Borrower Details
+exports.getLoans = async (req, res, next) => {
   try {
-    const loans = await LoanApplication.find({ tenantId: req.user.tenantId })
-      .populate('borrowerId', 'name phone')
-      .populate('schemeId', 'name interestRate')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({ success: true, count: loans.length, data: loans });
+    const loans = await Loan.find().populate('borrower', 'fullName phone aadhaarNumber').sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: loans });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// @desc    Approve or Reject Loan Application
-// @route   PATCH /api/loans/:id/approve
-// @access  Private (ORG_ADMIN)
-const approveLoan = async (req, res) => {
+// 3. Mark Installment as Paid
+exports.payInstallment = async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const { loanId, installmentId } = req.params;
 
-    const loan = await LoanApplication.findOne({ _id: req.params.id, tenantId: req.user.tenantId });
-    if (!loan) {
-      return res.status(404).json({ message: 'Loan application not found' });
-    }
+    const loan = await Loan.findById(loanId);
+    if (!loan) return res.status(404).json({ message: 'Loan not found' });
 
-    if (loan.status !== 'PENDING') {
-      return res.status(400).json({ message: `Cannot modify loan that is already ${loan.status}` });
-    }
+    const installment = loan.schedule.id(installmentId);
+    if (!installment) return res.status(404).json({ message: 'Installment not found' });
 
-    loan.status = status || 'APPROVED';
-    loan.approvedBy = req.user.id;
-    await loan.save();
-
-    res.status(200).json({ success: true, data: loan });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Disburse Approved Loan
-// @route   PATCH /api/loans/:id/disburse
-// @access  Private (ORG_ADMIN)
-const disburseLoan = async (req, res) => {
-  try {
-    const loan = await LoanApplication.findOne({ _id: req.params.id, tenantId: req.user.tenantId });
-    if (!loan) {
-      return res.status(404).json({ message: 'Loan application not found' });
-    }
-
-    if (loan.status !== 'APPROVED') {
-      return res.status(400).json({ message: `Only APPROVED loans can be disbursed. Current status: ${loan.status}` });
-    }
-
-    loan.status = 'DISBURSED';
-    loan.disbursedAt = new Date();
-    await loan.save();
-
-    res.status(200).json({ success: true, data: loan });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Add/Verify in controllers/loanController.js
-const getLoanById = async (req, res) => {
-  try {
-    const loan = await LoanApplication.findOne({
-      _id: req.params.id,
-      tenantId: req.user.tenantId,
-    })
-      .populate('borrowerId')
-      .populate('schemeId');
-
-    if (!loan) {
-      return res.status(404).json({ success: false, message: 'Loan application not found' });
-    }
-
-    res.status(200).json({ success: true, data: loan });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-//Repay Installment
-const repayInstallment = async (req, res) => {
-  try {
-    const { installmentNumber, paymentMode, transactionRef } = req.body;
-
-    const loan = await LoanApplication.findOne({
-      _id: req.params.id,
-      tenantId: req.user.tenantId,
-    });
-
-    if (!loan) {
-      return res.status(404).json({ message: 'Loan application not found' });
-    }
-
-    if (loan.status !== 'DISBURSED') {
-      return res.status(400).json({
-        message: `Repayments can only be processed for DISBURSED loans. Current status: ${loan.status}`,
-      });
-    }
-
-    // Find target installment
-    const installment = loan.repaymentSchedule.find(
-      (item) => item.installmentNumber === Number(installmentNumber)
-    );
-
-    if (!installment) {
-      return res.status(404).json({ message: `Installment #${installmentNumber} not found` });
-    }
-
-    if (installment.status === 'PAID') {
-      return res.status(400).json({ message: `Installment #${installmentNumber} is already paid` });
-    }
-
-    // Update installment status
     installment.status = 'PAID';
     installment.paidAt = new Date();
-    installment.paymentMode = paymentMode || 'CASH';
-    installment.transactionRef = transactionRef || null;
 
-    // Check if all installments are paid
-    const allPaid = loan.repaymentSchedule.every((item) => item.status === 'PAID');
-    if (allPaid) {
-      loan.status = 'REPAID';
-    }
+    // Check if all installments paid -> Close Loan
+    const allPaid = loan.schedule.every((item) => item.status === 'PAID');
+    if (allPaid) loan.status = 'CLOSED';
 
     await loan.save();
 
-    res.status(200).json({
-      success: true,
-      message: `Installment #${installmentNumber} payment recorded successfully`,
-      data: loan,
-    });
+    res.status(200).json({ success: true, data: loan });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
-
-
-module.exports = { applyForLoan, getLoans, getLoanById, approveLoan, disburseLoan, repayInstallment };
