@@ -81,12 +81,18 @@ const borrowerRoutes = require('./routes/borrowerRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const loanRoutes = require('./routes/loanRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes'); // <-- Clean Import
+const groupRoutes = require('./routes/groupRoutes');
+const loanApplicationRoutes = require('./routes/loanApplicationRoutes');
+const repaymentRoutes = require('./routes/repaymentRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/borrowers', borrowerRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/loans', loanRoutes);
-app.use('/api/analytics', analyticsRoutes); // <-- Mount correctly with other routes
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/loan-applications', loanApplicationRoutes);
+app.use('/api/repayments', repaymentRoutes);
 
 // Health Check Route
 app.get('/', (req, res) => {

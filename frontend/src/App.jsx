@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import GroupLoanGRT from './pages/GroupLoanGRT';
 // Pages Import
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -11,6 +11,9 @@ import Borrowers from './pages/Borrowers';
 import Loans from './pages/Loans';
 import AmortizationCalc from './pages/AmortizationCalc';
 import AddItem from './pages/AddItem';
+import LoanApplicationForm from './pages/LoanApplicationForm';
+import MemberLog from './pages/MemberLog';
+import EmiCollection from './pages/EmiCollection';
 
 function App() {
   return (
@@ -30,6 +33,10 @@ function App() {
               <Route path="/loans" element={<Loans />} />
               <Route path="/amortization" element={<AmortizationCalc />} />
               <Route path="/add" element={<AddItem />} />
+              <Route path="/group-loan-grt" element={<GroupLoanGRT />} />
+              <Route path="/loan-application-form" element={<LoanApplicationForm />} />
+              <Route path="/member-log" element={<MemberLog />} />
+              <Route path="/emi-collection" element={<EmiCollection />} />
             </Route>
 
             {/* Fallback Redirect */}

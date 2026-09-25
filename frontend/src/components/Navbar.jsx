@@ -10,7 +10,9 @@ import {
   Users, 
   Landmark, 
   LogOut, 
-  ShieldCheck 
+  ShieldCheck,
+  FileText,
+  IndianRupee
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -29,10 +31,13 @@ const Navbar = () => {
   if (!user) return null; // Hide Navbar on Login page
 
   const modules = [
+    { name: 'Member List (LOA)', path: '/member-list', icon: Users, desc: 'View submitted loan applications' },
     { name: 'Add Items', path: '/add', icon: PlusCircle, desc: 'CRUD operations' },
     { name: 'Amortization Calc', path: '/amortization', icon: Calculator, desc: 'EMI & Interest Schedule' },
     { name: 'Borrower Profiles', path: '/borrowers', icon: Users, desc: 'Manage Borrowers' },
     { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
+    { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
+    { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' }
   ];
 
   return (
@@ -65,6 +70,26 @@ const Navbar = () => {
             }`}
           >
             <LayoutDashboard size={16} /> Dashboard
+          </Link>
+          <Link 
+  to="/member-log" 
+  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+    location.pathname === '/member-log'
+      ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+      : 'text-slate-600 hover:bg-slate-50'
+  }`}
+>
+  <Users size={16} /> Member Log
+</Link>
+          <Link 
+            to="/loan-application-form" 
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              location.pathname === '/loan-application-form'
+                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <FileText size={16} /> Loan Application (LOA)
           </Link>
 
           {/* Modules Dropdown */}
