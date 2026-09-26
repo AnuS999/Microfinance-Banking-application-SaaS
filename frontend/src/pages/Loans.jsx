@@ -9,7 +9,7 @@ const Loans = () => {
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const res = await API.get('/loans');
+        const res = await API.get('/loan-applications/all');
         setLoans(res.data.data || res.data || []);
       } catch (err) {
         console.error('Failed to fetch loans', err);
@@ -26,7 +26,7 @@ const Loans = () => {
         <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
           <Landmark className="text-indigo-600" size={24} /> Loan Management & Tracking
         </h1>
-        <p className="text-xs text-slate-500">View active loans, repayment schedules, and mark EMIs</p>
+        <p className="text-xs text-slate-500">View active loans, repayment schedules, and current statuses</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -51,27 +51,39 @@ const Loans = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {loans.map((loan) => (
-                  <tr key={loan._id} className="hover:bg-slate-50">
-                    <td className="p-3.5 font-semibold text-slate-800">
-                      {loan.borrower?.name || 'N/A'}
-                    </td>
-                    <td className="p-3.5 font-bold text-slate-900">
-                      ₹{Number(loan.principalAmount || 0).toLocaleString()}
-                    </td>
-                    <td className="p-3.5 text-slate-600">
-                      {loan.tenureMonths} Months
-                    </td>
-                    <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                        {loan.status || 'ACTIVE'}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-slate-500">
-                      {loan.createdAt ? new Date(loan.createdAt).toLocaleDateString() : 'N/A'}
-                    </td>
-                  </tr>
-                ))}
+                {loans.map((loan) => {
+                  const currentStatus = loan.disbursementStatus || loan.status || 'PENDING';
+                  const borrowerName = loan.personalDetails?.fullName || loan.memberName || loan.borrower?.name || loan.fullName || 'N/A';
+                  const loanAmount = loan.loanDetails?.loanAmount || loan.principalAmount || 0;
+                  const tenureMonths = loan.loanDetails?.tenureMonths || loan.tenure || loan.tenureMonths || 'N/A';
+
+                  return (
+                    <tr key={loan._id} className="hover:bg-slate-50">
+                      <td className="p-3.5 font-semibold text-slate-800">
+                        {borrowerName}
+                      </td>
+                      <td className="p-3.5 font-bold text-slate-900">
+                        ₹{Number(loanAmount).toLocaleString('en-IN')}
+                      </td>
+                      <td className="p-3.5 text-slate-600">
+                        {tenureMonths} Months
+                      </td>
+                      <td className="p-3.5">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                          currentStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                          currentStatus === 'DISBURSED' ? 'bg-purple-50 text-purple-700 border-purple-300' :
+                          currentStatus === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-300' :
+                          'bg-amber-50 text-amber-700 border-amber-300'
+                        }`}>
+                          {currentStatus}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-slate-500">
+                        {loan.applicationDate || loan.createdAt ? new Date(loan.applicationDate || loan.createdAt).toLocaleDateString() : 'N/A'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
