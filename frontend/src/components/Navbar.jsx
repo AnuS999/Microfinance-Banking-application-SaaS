@@ -12,7 +12,8 @@ import {
   LogOut, 
   ShieldCheck,
   FileText,
-  IndianRupee
+  IndianRupee,
+  Printer
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -37,7 +38,8 @@ const Navbar = () => {
     { name: 'Borrower Profiles', path: '/borrowers', icon: Users, desc: 'Manage Borrowers' },
     { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
     { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
-    { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' }
+    { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' },
+    { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' }
   ];
 
   return (

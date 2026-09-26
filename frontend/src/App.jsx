@@ -14,6 +14,8 @@ import AddItem from './pages/AddItem';
 import LoanApplicationForm from './pages/LoanApplicationForm';
 import MemberLog from './pages/MemberLog';
 import EmiCollection from './pages/EmiCollection';
+import LoaRecords from './pages/LoaRecords';
+import Dashboard from './components/dashboard/Dashboard';
 
 function App() {
   return (
@@ -28,7 +30,7 @@ function App() {
 
             {/* Protected Routes (Accessible by ADMIN and AGENT) */}
             <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'AGENT']} />}>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Dashboard />} />
               <Route path="/borrowers" element={<Borrowers />} />
               <Route path="/loans" element={<Loans />} />
               <Route path="/amortization" element={<AmortizationCalc />} />
@@ -37,6 +39,7 @@ function App() {
               <Route path="/loan-application-form" element={<LoanApplicationForm />} />
               <Route path="/member-log" element={<MemberLog />} />
               <Route path="/emi-collection" element={<EmiCollection />} />
+              <Route path="/loa-records" element={<LoaRecords />} />
             </Route>
 
             {/* Fallback Redirect */}

@@ -14,8 +14,8 @@ const initialFormState = {
   mobileNumber: '',
   husbandName: '',
   address: { village: '', post: '', policeStation: '', district: '', state: '', pinCode: '', caste: '', religion: '' },
-  guarantor: { name: '', fathersName: '', dateOfBirthOrAge: '', relationWithMember: '', voterCardNo: '', aadhaarNumber: '[Aadhaar Redacted]' },
-  kycAndBank: { memberVoterCardNo: '', memberAadhaarNumber: '[Aadhaar Redacted]', rationCardNo: '', ifscCode: '', bankName: '', branchName: '', accountNumber: '' },
+  guarantor: { name: '', fathersName: '', dateOfBirthOrAge: '', relationWithMember: '', voterCardNo: '', aadhaarNumber: '' },
+  kycAndBank: { memberVoterCardNo: '', memberAadhaarNumber: '', rationCardNo: '', ifscCode: '', bankName: '', branchName: '', accountNumber: '' },
   loanDetails: { tenureOrCycle: '', loanAmount: '', loanPurpose: '' },
   parentalDetails: { fullAddress: '', fatherName: '', fatherMobile: '', brotherName: '', brotherMobile: '', landmark: '' },
 };

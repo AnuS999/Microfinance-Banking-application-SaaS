@@ -9,6 +9,8 @@ const {
 
 router.post('/create', protect, createLoanApplication);
 router.get('/all', protect, getAllLoanApplications);
-router.put('/status/:id', protect, authorize('ADMIN'), updateDisbursementStatus);
+
+// Fixed: Removed duplicate route, allowed both uppercase/lowercase roles to prevent 403
+router.put('/status/:id', protect, authorize('admin', 'ADMIN'), updateDisbursementStatus);
 
 module.exports = router;
