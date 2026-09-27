@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import GroupLoanGRT from './pages/GroupLoanGRT';
+import MasterDropdowns from './pages/MasterDropdowns';
 // Pages Import
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -16,6 +17,7 @@ import MemberLog from './pages/MemberLog';
 import EmiCollection from './pages/EmiCollection';
 import LoaRecords from './pages/LoaRecords';
 import Dashboard from './components/dashboard/Dashboard';
+import MasterMixedView from './pages/MasterMixedView';
 
 function App() {
   return (
@@ -40,6 +42,8 @@ function App() {
               <Route path="/member-log" element={<MemberLog />} />
               <Route path="/emi-collection" element={<EmiCollection />} />
               <Route path="/loa-records" element={<LoaRecords />} />
+              <Route path="/admin/mixed" element={<MasterMixedView />} />
+              {/* <Route path="/admin/mixed" element={<MasterMixedView />} /> */}
             </Route>
 
             {/* Fallback Redirect */}

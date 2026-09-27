@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import API from '../api/axiosInstance';
 import { FileText, Send, Download } from 'lucide-react';
 
@@ -24,6 +24,31 @@ const LoanApplicationForm = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
 
+  // Master Dropdown Options States
+  const [identityOptions, setIdentityOptions] = useState([]);
+  const [relationOptions, setRelationOptions] = useState([]);
+  const [purposeOptions, setPurposeOptions] = useState([]);
+
+  // Fetch Master Dropdowns on Component Mount
+  useEffect(() => {
+    const fetchMasterOptions = async () => {
+      try {
+        const [identityRes, relationRes, purposeRes] = await Promise.all([
+          API.get('/master-dropdowns?category=identity').catch(() => ({ data: [] })),
+          API.get('/master-dropdowns?category=relation').catch(() => ({ data: [] })),
+          API.get('/master-dropdowns?category=purpose').catch(() => ({ data: [] }))
+        ]);
+
+        setIdentityOptions(identityRes.data.data || identityRes.data || []);
+        setRelationOptions(relationRes.data.data || relationRes.data || []);
+        setPurposeOptions(purposeRes.data.data || purposeRes.data || []);
+      } catch (err) {
+        console.error('Failed to load master dropdown options', err);
+      }
+    };
+    fetchMasterOptions();
+  }, []);
+
   const handleChange = (section, field, value) => {
     if (section) {
       setFormData(prev => ({
@@ -41,7 +66,7 @@ const LoanApplicationForm = () => {
       setLoading(true);
       await API.post('/loan-applications/create', formData);
       alert('LinIn Loan Application Form (LOA) submitted successfully!');
-      setFormData(initialFormState); // Form reset / screen se data hatane ke liye
+      setFormData(initialFormState);
     } catch (err) {
       alert(err.response?.data?.message || 'Submission failed');
     } finally {
@@ -50,7 +75,7 @@ const LoanApplicationForm = () => {
   };
 
   const handleDownloadPDF = () => {
-    window.print(); // Browser ka print dialog khulega jisse PDF save ki ja sakti hai
+    window.print();
   };
 
   return (
@@ -119,7 +144,20 @@ const LoanApplicationForm = () => {
               <input type="text" placeholder="जमानतदार का नाम" value={formData.guarantor.name} onChange={(e) => handleChange('guarantor', 'name', e.target.value)} required className="p-2 border rounded" />
               <input type="text" placeholder="जमानतदार के पिता का नाम" value={formData.guarantor.fathersName} onChange={(e) => handleChange('guarantor', 'fathersName', e.target.value)} required className="p-2 border rounded" />
               <input type="text" placeholder="जमानतदार की जन्म तिथि / उम्र" value={formData.guarantor.dateOfBirthOrAge} onChange={(e) => handleChange('guarantor', 'dateOfBirthOrAge', e.target.value)} required className="p-2 border rounded" />
-              <input type="text" placeholder="सदस्य से सम्बन्ध (Relation)" value={formData.guarantor.relationWithMember} onChange={(e) => handleChange('guarantor', 'relationWithMember', e.target.value)} required className="p-2 border rounded" />
+              
+              {/* Dynamic Relation Dropdown */}
+              <select 
+                value={formData.guarantor.relationWithMember} 
+                onChange={(e) => handleChange('guarantor', 'relationWithMember', e.target.value)} 
+                required 
+                className="p-2 border rounded bg-white"
+              >
+                <option value="">सदस्य से सम्बन्ध चुनें (Relation)</option>
+                {relationOptions.map((rel) => (
+                  <option key={rel._id || rel.name} value={rel.name}>{rel.name}</option>
+                ))}
+              </select>
+
               <input type="text" placeholder="जमानतदार का Voter Card No" value={formData.guarantor.voterCardNo} onChange={(e) => handleChange('guarantor', 'voterCardNo', e.target.value)} required className="p-2 border rounded" />
               <input type="text" placeholder="जमानतदार का ID No" value={formData.guarantor.aadhaarNumber} onChange={(e) => handleChange('guarantor', 'aadhaarNumber', e.target.value)} required className="p-2 border rounded" />
             </div>
@@ -145,7 +183,19 @@ const LoanApplicationForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <input type="text" placeholder="लोन चकर / Tenure (e.g. 50 Weeks)" value={formData.loanDetails.tenureOrCycle} onChange={(e) => handleChange('loanDetails', 'tenureOrCycle', e.target.value)} required className="p-2 border rounded" />
               <input type="number" placeholder="लोन अमाउंट (Loan Amount)" value={formData.loanDetails.loanAmount} onChange={(e) => handleChange('loanDetails', 'loanAmount', e.target.value)} required className="p-2 border rounded" />
-              <input type="text" placeholder="लोन उद्देश्य (Purpose e.g. Dairy/Business)" value={formData.loanDetails.loanPurpose} onChange={(e) => handleChange('loanDetails', 'loanPurpose', e.target.value)} required className="p-2 border rounded" />
+              
+              {/* Dynamic Purpose Dropdown */}
+              <select 
+                value={formData.loanDetails.loanPurpose} 
+                onChange={(e) => handleChange('loanDetails', 'loanPurpose', e.target.value)} 
+                required 
+                className="p-2 border rounded bg-white"
+              >
+                <option value="">लोन उद्देश्य चुनें (Purpose)</option>
+                {purposeOptions.map((pur) => (
+                  <option key={pur._id || pur.name} value={pur.name}>{pur.name}</option>
+                ))}
+              </select>
             </div>
           </div>
 

@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   FileText,
   IndianRupee,
-  Printer
+  Printer,
+  Settings
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -31,16 +32,17 @@ const Navbar = () => {
 
   if (!user) return null; // Hide Navbar on Login page
 
-  const modules = [
-    { name: 'Member List (LOA)', path: '/member-list', icon: Users, desc: 'View submitted loan applications' },
-    { name: 'Add Items', path: '/add', icon: PlusCircle, desc: 'CRUD operations' },
-    { name: 'Amortization Calc', path: '/amortization', icon: Calculator, desc: 'EMI & Interest Schedule' },
-    { name: 'Borrower Profiles', path: '/borrowers', icon: Users, desc: 'Manage Borrowers' },
-    { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
-    { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
-    { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' },
-    { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' }
-  ];
+const modules = [
+  { name: 'Member List (LOA)', path: '/member-list', icon: Users, desc: 'View submitted loan applications' },
+  { name: 'Add Items', path: '/add', icon: PlusCircle, desc: 'CRUD operations' },
+  { name: 'Amortization Calc', path: '/amortization', icon: Calculator, desc: 'EMI & Interest Schedule' },
+  { name: 'Borrower Profiles', path: '/borrowers', icon: Users, desc: 'Manage Borrowers' },
+  { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
+  { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
+  { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' },
+  { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' },
+  { name: 'Master Dropdown Settings', path: '/admin/mixed', icon: Settings, desc: 'Manage dropdown fields and options' }
+];
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50">

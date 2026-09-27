@@ -84,6 +84,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes'); // <-- Clean Import
 const groupRoutes = require('./routes/groupRoutes');
 const loanApplicationRoutes = require('./routes/loanApplicationRoutes');
 const repaymentRoutes = require('./routes/repaymentRoutes');
+const masterDropdownRoutes = require('./routes/masterDropdownRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/borrowers', borrowerRoutes);
@@ -93,6 +94,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/loan-applications', loanApplicationRoutes);
 app.use('/api/repayments', repaymentRoutes);
+app.use('/api/master-dropdowns', masterDropdownRoutes);
 
 // Health Check Route
 app.get('/', (req, res) => {
