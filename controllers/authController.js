@@ -1,5 +1,6 @@
-const User = require('../models/User');
+const Employee = require('../models/Employee');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 // Helper function to generate JWT token
 const generateToken = (id, role) => {
@@ -8,47 +9,59 @@ const generateToken = (id, role) => {
   });
 };
 
-// @desc    Register a new user
+// @desc    Register a new employee / user
 // @route   POST /api/auth/register
 exports.registerUser = async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
+  console.log('========================================');
+  console.log('🚨 REGISTER ROUTE HIT IN authController.js');
+  console.log('Request Body:', req.body);
+  console.log('========================================');
 
-    // Check if required fields are present
-    if (!name || !email || !password) {
+  try {
+    const { fullName, name, email, password, role, designation, salary, employeeCode, phoneNumber, address } = req.body;
+    const empName = fullName || name;
+
+    if (!empName || !email || !password) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Please provide all required fields (name, email, password)' 
+        message: 'Please provide all required fields (fullName, email, password)' 
       });
     }
 
-    // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    const employeeExists = await Employee.findOne({ email });
+    if (employeeExists) {
       return res.status(400).json({ 
         success: false, 
         message: 'User already exists with this email' 
       });
     }
 
-    // Create new user (password hashing is handled via mongoose pre-save middleware)
-    const user = await User.create({
-      name,
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const employee = await Employee.create({
+      fullName: empName,
       email,
-      password,
-      role: role || 'AGENT',
+      password: hashedPassword,
+      role: role || 'Agent',
+      designation: designation || 'Field Officer',
+      salary: salary || 0,
+      employeeCode: employeeCode || `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+      phoneNumber: phoneNumber || '',
+      address: address || ''
     });
 
-    // Generate JWT token
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(employee._id, employee.role);
 
     res.status(201).json({
       success: true,
+      message: 'Account created successfully',
       data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        _id: employee._id,
+        name: employee.fullName,
+        email: employee.email,
+        role: employee.role,
+        designation: employee.designation,
         token,
       },
     });
@@ -61,9 +74,14 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// @desc    Login user & get token
+// @desc    Login employee & get token
 // @route   POST /api/auth/login
 exports.loginUser = async (req, res) => {
+  console.log('========================================');
+  console.log('🚨 LOGIN ROUTE HIT IN authController.js');
+  console.log('Request Body:', req.body);
+  console.log('========================================');
+
   try {
     const { email, password } = req.body;
 
@@ -74,24 +92,43 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // Find user and explicitly select password field
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.matchPassword(password))) {
+    const employee = await Employee.findOne({ email: email.trim() }).select('+password');
+    console.log("Found Employee in DB:", employee ? employee.email : "Not Found");
+
+    if (!employee) {
       return res.status(401).json({ 
         success: false, 
-        message: 'Invalid email or password' 
+        message: 'Invalid email or password (User not found in DB)' 
       });
     }
 
-    const token = generateToken(user._id, user.role);
+    let isMatch = false;
+    if (employee.password && (employee.password.startsWith('$2a$') || employee.password.startsWith('$2b$'))) {
+      isMatch = await bcrypt.compare(password, employee.password);
+    } else {
+      isMatch = (password === employee.password);
+    }
+
+    console.log("Password Match Status:", isMatch);
+
+    if (!isMatch) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password (Password mismatch)' 
+      });
+    }
+
+    const token = generateToken(employee._id, employee.role);
 
     res.status(200).json({
       success: true,
+      message: 'Login successful',
       data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        _id: employee._id,
+        name: employee.fullName || employee.name,
+        email: employee.email,
+        role: employee.role,
+        designation: employee.designation || 'Field Officer',
         token,
       },
     });

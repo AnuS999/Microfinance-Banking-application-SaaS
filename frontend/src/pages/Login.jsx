@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { login, clearAuthError } from '../redux/slices/authSlice';
 import { Lock, Mail, ShieldAlert } from 'lucide-react';
 
@@ -14,18 +14,23 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      // Role-based redirection upon successful login
+      if (user.role === 'Agent') {
+        navigate('/emi-collection');
+      } else {
+        navigate('/');
+      }
     }
     return () => {
       dispatch(clearAuthError());
     };
   }, [user, navigate, dispatch]);
 
-  const handleSubmit = (e) => {
+const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('🔥 Login Button Clicked! Email:', email, 'Password:', password);
     dispatch(login({ email, password }));
   };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
@@ -84,12 +89,9 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Register Link added here */}
-        <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-indigo-600 font-semibold hover:underline">
-            Create Account
-          </Link>
+        {/* Note: Public registration link removed to enforce Admin-only profile creation */}
+        <div className="text-center text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+          Protected System. Contact Admin for login credentials.
         </div>
       </div>
     </div>

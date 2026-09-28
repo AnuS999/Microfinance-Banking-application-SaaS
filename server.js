@@ -11,10 +11,12 @@ connectDB();
 
 const app = express();
 
-// Global Middlewares
-app.use(cors());
+// Global Middlewares (Updated with CORS credentials support)
+app.use(cors({
+  origin: 'http://localhost:5173', // Frontend ka exact URL
+  credentials: true                // Cookies aur Authorization headers allow karne ke liye
+}));
 app.use(express.json());
-
 
 // ==========================================
 // ITEM ROUTES (MongoDB Database Integration)
@@ -80,11 +82,13 @@ const authRoutes = require('./routes/authRoutes');
 const borrowerRoutes = require('./routes/borrowerRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const loanRoutes = require('./routes/loanRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes'); // <-- Clean Import
+const analyticsRoutes = require('./routes/analyticsRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const loanApplicationRoutes = require('./routes/loanApplicationRoutes');
 const repaymentRoutes = require('./routes/repaymentRoutes');
 const masterDropdownRoutes = require('./routes/masterDropdownRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
+const collectionRoutes = require('./routes/collectionRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/borrowers', borrowerRoutes);
@@ -95,6 +99,8 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/loan-applications', loanApplicationRoutes);
 app.use('/api/repayments', repaymentRoutes);
 app.use('/api/master-dropdowns', masterDropdownRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/collections', collectionRoutes);
 
 // Health Check Route
 app.get('/', (req, res) => {

@@ -18,6 +18,8 @@ import EmiCollection from './pages/EmiCollection';
 import LoaRecords from './pages/LoaRecords';
 import Dashboard from './components/dashboard/Dashboard';
 import MasterMixedView from './pages/MasterMixedView';
+import EmployeeManagement from './pages/EmployeeManagement';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -43,7 +45,8 @@ function App() {
               <Route path="/emi-collection" element={<EmiCollection />} />
               <Route path="/loa-records" element={<LoaRecords />} />
               <Route path="/admin/mixed" element={<MasterMixedView />} />
-              {/* <Route path="/admin/mixed" element={<MasterMixedView />} /> */}
+             <Route path="/admin/employees" element={<EmployeeManagement />} />
+             <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* Fallback Redirect */}

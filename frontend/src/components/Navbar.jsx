@@ -25,24 +25,36 @@ const Navbar = () => {
 
   const { user } = useSelector((state) => state.auth);
 
+  // LocalStorage fallback
+  const localUser = JSON.parse(localStorage.getItem('userInfo')) || {};
+  const currentUser = user || localUser;
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
   };
 
-  if (!user) return null; // Hide Navbar on Login page
+  if (!currentUser || Object.keys(currentUser).length === 0) return null;
 
-const modules = [
-  { name: 'Member List (LOA)', path: '/member-list', icon: Users, desc: 'View submitted loan applications' },
-  { name: 'Add Items', path: '/add', icon: PlusCircle, desc: 'CRUD operations' },
-  { name: 'Amortization Calc', path: '/amortization', icon: Calculator, desc: 'EMI & Interest Schedule' },
-  { name: 'Borrower Profiles', path: '/borrowers', icon: Users, desc: 'Manage Borrowers' },
-  { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
-  { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
-  { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' },
-  { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' },
-  { name: 'Master Dropdown Settings', path: '/admin/mixed', icon: Settings, desc: 'Manage dropdown fields and options' }
-];
+  // Safe Name Extraction with Fallback to Email username if name is missing
+  const rawName = currentUser?.fullName || currentUser?.name || currentUser?.user?.name || currentUser?.email?.split('@')[0] || 'User';
+  // Capitalize first letter of email fallback if name was missing
+  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+  
+  const avatar = currentUser?.avatar || currentUser?.user?.avatar || '';
+
+  const modules = [
+    { name: 'Member List (LOA)', path: '/member-list', icon: Users, desc: 'View submitted loan applications' },
+    { name: 'Add Items', path: '/add', icon: PlusCircle, desc: 'CRUD operations' },
+    { name: 'Amortization Calc', path: '/amortization', icon: Calculator, desc: 'EMI & Interest Schedule' },
+    { name: 'Borrower Profiles', path: '/borrowers', icon: Users, desc: 'Manage Borrowers' },
+    { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
+    { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
+    { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' },
+    { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' },
+    { name: 'Master Dropdown Settings', path: '/admin/mixed', icon: Settings, desc: 'Manage dropdown fields and options' },
+    { name: 'Employee Management', path: '/admin/employees', icon: Users, desc: 'Manage staff details, salary & designations' }
+  ];
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -76,15 +88,15 @@ const modules = [
             <LayoutDashboard size={16} /> Dashboard
           </Link>
           <Link 
-  to="/member-log" 
-  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-    location.pathname === '/member-log'
-      ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-      : 'text-slate-600 hover:bg-slate-50'
-  }`}
->
-  <Users size={16} /> Member Log
-</Link>
+            to="/member-log" 
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              location.pathname === '/member-log'
+                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Users size={16} /> Member Log
+          </Link>
           <Link 
             to="/loan-application-form" 
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -115,11 +127,11 @@ const modules = [
                 <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   Select Application Module
                 </div>
-                {modules.map((item) => {
+                {modules.map((item, index) => {
                   const Icon = item.icon;
                   return (
                     <Link
-                      key={item.path}
+                      key={`${item.path}-${index}`}
                       to={item.path}
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-start gap-3 px-3 py-2 hover:bg-indigo-50/50 transition-colors"
@@ -138,14 +150,25 @@ const modules = [
             )}
           </div>
 
-          {/* User Profile Info & Logout */}
+          {/* User Profile Quick Info & Logout */}
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-            <div className="text-right">
-              <div className="text-xs font-bold text-slate-800">{user.name}</div>
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
-                <ShieldCheck size={10} /> {user.role}
-              </span>
-            </div>
+            <Link to="/profile" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
+              {/* Avatar / Photo preview */}
+              <div className="w-9 h-9 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden flex items-center justify-center font-bold text-indigo-700 text-sm">
+                {avatar ? (
+                  <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  displayName?.charAt(0)?.toUpperCase() || 'U'
+                )}
+              </div>
+              
+              {/* User Name Tag */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50/70 text-indigo-700 border border-indigo-100">
+                <ShieldCheck size={13} className="text-indigo-600" />
+                <span>{displayName}</span>
+              </div>
+            </Link>
+
             <button
               onClick={handleLogout}
               title="Logout"
