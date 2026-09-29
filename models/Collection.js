@@ -9,7 +9,12 @@ const collectionSchema = new mongoose.Schema({
   paidAmount: { type: Number, required: true },
   paymentMode: { type: String, enum: ['Cash', 'Online'], default: 'Cash' },
   collectionDate: { type: Date, default: Date.now },
-  collectedBy: { type: String } // Agent or Admin name
+  collectedBy: { type: String }, // Agent or Admin name string
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Employee',
+    required: true,
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Collection', collectionSchema);

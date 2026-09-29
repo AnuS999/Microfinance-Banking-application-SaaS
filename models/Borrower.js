@@ -42,6 +42,11 @@ const borrowerSchema = new mongoose.Schema(
       enum: ['ACTIVE', 'INACTIVE', 'DEFTERD'],
       default: 'ACTIVE',
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Employee',
+      required: true,
+    },
   },
   { timestamps: true }
 );

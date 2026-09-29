@@ -22,7 +22,7 @@ const loanSchemeSchema = new mongoose.Schema(
       required: [true, 'Please specify maximum loan amount'],
     },
     interestRate: {
-      type: Number, // Percentage per annum
+      type: Number,
       required: [true, 'Please specify interest rate'],
     },
     interestType: {
@@ -53,7 +53,7 @@ const loanSchemeSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Employee',
       required: true,
     },
   },

@@ -21,7 +21,7 @@ const verifyToken = (req, res, next) => {
 
 // Common Employee Creation Logic handler function
 const handleCreateEmployee = async (req, res) => {
-  console.log('🚨 CREATE EMPLOYEE HIT:', req.body);
+
   try {
     const { fullName, name, email, password, role, designation, salary, employeeCode, address, phone } = req.body;
     
@@ -60,10 +60,7 @@ router.post('/create', handleCreateEmployee);
 
 // 2. Login Route
 router.post('/login', async (req, res) => {
-  console.log('========================================');
-  console.log('🚨 /api/auth/login ROUTE HIT');
-  console.log('Request Body:', req.body);
-  console.log('========================================');
+  
 
   try {
     const { email, password } = req.body;
@@ -100,14 +97,14 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Login Route Error:', err);
+  
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // 3. Get Logged-in User Profile Route
 router.get('/profile', verifyToken, async (req, res) => {
-  console.log('🚨 /api/auth/profile ROUTE HIT for ID:', req.user.id);
+
   try {
     const employee = await Employee.findById(req.user.id).select('-password');
     if (!employee) {
@@ -115,7 +112,7 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
     res.status(200).json({ success: true, user: employee });
   } catch (err) {
-    console.error('Get Profile Error:', err);
+
     res.status(500).json({ success: false, message: err.message });
   }
 });

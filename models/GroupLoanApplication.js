@@ -21,7 +21,7 @@ const groupLoanApplicationSchema = new mongoose.Schema(
   {
     agent: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Employee', // User ki jagah Employee ref
       required: true,
     },
     centerNameOrLocation: { type: String, required: true },

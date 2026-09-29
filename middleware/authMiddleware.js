@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const Employee = require('../models/Employee'); // User ki jagah Employee model use hoga
 
 // Protect Routes (Verify JWT Token)
 exports.protect = async (req, res, next) => {
@@ -18,7 +18,14 @@ exports.protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_12345');
-    req.user = await User.findById(decoded.id).select('-password');
+    
+    // Employee collection se logged-in user ko find karna
+    req.user = await Employee.findById(decoded.id).select('-password');
+
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Token failed: Employee not found' });
+    }
+
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Token verification failed' });

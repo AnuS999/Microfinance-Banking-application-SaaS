@@ -15,7 +15,7 @@ const repaymentScheduleSchema = new mongoose.Schema({
   paidAt: Date,
   collectedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Employee',
     default: null,
   },
 });
@@ -26,6 +26,11 @@ const loanSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Borrower',
       required: true,
+    },
+    createdBy: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Employee', 
+      required: true 
     },
     principalAmount: { type: Number, required: true },
     annualInterestRate: { type: Number, required: true },

@@ -5,7 +5,6 @@ const loanApplicationSchema = new mongoose.Schema(
     branchName: { type: String, required: true },
     applicationDate: { type: Date, default: Date.now },
     
-    // Member Personal Details
     memberName: { type: String, required: true },
     dateOfBirth: { type: String, required: true },
     age: { type: Number, required: true },
@@ -15,7 +14,6 @@ const loanApplicationSchema = new mongoose.Schema(
     mobileNumber: { type: String, required: true },
     husbandName: { type: String, required: true },
     
-    // Member Current Address
     address: {
       village: { type: String, required: true },
       post: { type: String, required: true },
@@ -27,7 +25,6 @@ const loanApplicationSchema = new mongoose.Schema(
       religion: { type: String },
     },
 
-    // Guarantor Details (jamanatdar)
     guarantor: {
       name: { type: String, required: true },
       fathersName: { type: String, required: true },
@@ -37,7 +34,6 @@ const loanApplicationSchema = new mongoose.Schema(
       aadhaarNumber: { type: String, required: true },
     },
 
-    // KYC & Bank Details
     kycAndBank: {
       memberVoterCardNo: { type: String, required: true },
       memberAadhaarNumber: { type: String, required: true },
@@ -48,14 +44,12 @@ const loanApplicationSchema = new mongoose.Schema(
       accountNumber: { type: String, required: true },
     },
 
-    // Loan Specifics
     loanDetails: {
-      tenureOrCycle: { type: String, required: true }, // Loan Chakar
+      tenureOrCycle: { type: String, required: true },
       loanAmount: { type: Number, required: true },
-      loanPurpose: { type: String, required: true }, // Loan Uddeshya
+      loanPurpose: { type: String, required: true },
     },
 
-    // Mayke / Parental Background Details
     parentalDetails: {
       fullAddress: { type: String, required: true },
       fatherName: { type: String, required: true },
@@ -70,9 +64,10 @@ const loanApplicationSchema = new mongoose.Schema(
       enum: ['PENDING', 'DISBURSED', 'REJECTED'],
       default: 'PENDING',
     },
-    disbursedBy: {
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Employee',
+      required: true,
     },
   },
   { timestamps: true }

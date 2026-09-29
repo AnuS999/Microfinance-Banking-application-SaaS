@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const Employee = require('../models/Employee'); // Ensure your Employee model file exists and is correct
+const Employee = require('../models/Employee');
+const jwt = require('jsonwebtoken');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 // 1. Register New Employee / Create Route
 router.post('/create', async (req, res) => {
   try {
-    const { 
+    let { 
       employeeCode, 
       fullName, 
       email, 
@@ -18,7 +20,10 @@ router.post('/create', async (req, res) => {
       address 
     } = req.body;
 
-    // Check if employee already exists by email or employeeCode
+    if (!employeeCode) {
+      employeeCode = 'LIN' + Math.floor(100000 + Math.random() * 900000);
+    }
+
     const existingEmployee = await Employee.findOne({ 
       $or: [{ email }, { employeeCode }] 
     });
@@ -30,12 +35,12 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    // Create new employee record
     const newEmployee = new Employee({
       employeeCode,
+      name: fullName,
       fullName,
       email,
-      password, // (Optional: You can use bcrypt to hash this if required)
+      password, 
       role: role || 'Agent',
       designation,
       phoneNumber,
@@ -62,8 +67,10 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password, role } = req.body;
     
-    // Find employee by email and role
-    const employee = await Employee.findOne({ email, role });
+    let query = { email };
+    if (role) query.role = role;
+
+    const employee = await Employee.findOne(query);
     if (!employee) {
       return res.status(404).json({ 
         success: false, 
@@ -71,7 +78,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Password check
     if (employee.password !== password) {
       return res.status(401).json({ 
         success: false, 
@@ -79,12 +85,19 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    const token = jwt.sign(
+      { id: employee._id, role: employee.role },
+      process.env.JWT_SECRET || 'secret_key_12345',
+      { expiresIn: '1d' }
+    );
+
     res.status(200).json({ 
       success: true, 
       message: 'Login successful', 
+      token,
       user: {
         id: employee._id,
-        name: employee.fullName,
+        name: employee.fullName || employee.name,
         email: employee.email,
         role: employee.role,
         designation: employee.designation
@@ -97,8 +110,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 3. Get All Employees List Route
-router.get('/', async (req, res) => {
+// 3. Get All Employees List Route (Admin Only)
+router.get('/', protect, authorize('Admin', 'ADMIN'), async (req, res) => {
   try {
     const employees = await Employee.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: employees });
