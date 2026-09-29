@@ -13,8 +13,8 @@ const app = express();
 
 // Global Middlewares (Updated with CORS credentials support)
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend ka exact URL
-  credentials: true                // Cookies aur Authorization headers allow karne ke liye
+  origin: true, 
+  credentials: true
 }));
 app.use(express.json());
 
@@ -116,8 +116,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Local development ke liye port listener, Vercel ke liye export
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running in development mode on port ${PORT}`);
+  });
+}
+
+module.exports = app;
