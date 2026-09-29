@@ -1,45 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axiosInstance';
-import { Plus, Search, X } from 'lucide-react';
+import { Plus, Search, X, Edit2, Trash2 } from 'lucide-react';
 
 const MasterMixedView = () => {
   const [data, setData] = useState({
     identity: [],
     relation: [],
     purpose: [],
-    reason: []
+    reason: [],
+    location: [],
+    branch: [],
+    designation: [] // 📌 Added designation state
   });
 
   const [searchQuery, setSearchQuery] = useState({
     identity: '',
     relation: '',
     purpose: '',
-    reason: ''
+    reason: '',
+    location: '',
+    branch: '',
+    designation: '' // 📌 Added designation search query
   });
 
   const [loading, setLoading] = useState(false);
 
-  // Modal States
+  // Modal States for Add
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('');
   const [newItemName, setNewItemName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Modal States for Edit
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editItemId, setEditItemId] = useState('');
+  const [editItemName, setEditItemName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+
   const fetchAllMasters = async () => {
     try {
       setLoading(true);
-      const [idRes, relRes, purRes, reaRes] = await Promise.all([
+      const [idRes, relRes, purRes, reaRes, locRes, braRes, desRes] = await Promise.all([
         API.get('/master-dropdowns?category=identity').catch(() => ({ data: { data: [] } })),
         API.get('/master-dropdowns?category=relation').catch(() => ({ data: { data: [] } })),
         API.get('/master-dropdowns?category=purpose').catch(() => ({ data: { data: [] } })),
-        API.get('/master-dropdowns?category=reason').catch(() => ({ data: { data: [] } }))
+        API.get('/master-dropdowns?category=reason').catch(() => ({ data: { data: [] } })),
+        API.get('/master-dropdowns?category=location').catch(() => ({ data: { data: [] } })),
+        API.get('/master-dropdowns?category=branch').catch(() => ({ data: { data: [] } })),
+        API.get('/master-dropdowns?category=designation').catch(() => ({ data: { data: [] } })) // 📌 Fetch designation data
       ]);
 
       setData({
         identity: idRes.data.data || [],
         relation: relRes.data.data || [],
         purpose: purRes.data.data || [],
-        reason: reaRes.data.data || []
+        reason: reaRes.data.data || [],
+        location: locRes.data.data || [],
+        branch: braRes.data.data || [],
+        designation: desRes.data.data || [] // 📌 Set designation data
       });
     } catch (err) {
       console.error('Error fetching master lists', err);
@@ -79,8 +97,61 @@ const MasterMixedView = () => {
     }
   };
 
+  // Open Edit Modal
+  const handleOpenEditModal = (item, categoryKey) => {
+    setEditItemId(item._id);
+    setEditItemName(item.name);
+    setEditCategory(categoryKey);
+    setIsEditModalOpen(true);
+  };
+
+  // Update Item
+  const handleUpdateItem = async (e) => {
+    e.preventDefault();
+    if (!editItemName.trim()) return;
+
+    try {
+      setSubmitting(true);
+      await API.put(`/master-dropdowns/${editItemId}`, { 
+        name: editItemName.trim(), 
+        category: editCategory 
+      });
+      setIsEditModalOpen(false);
+      fetchAllMasters();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update item');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Delete Item
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm('Kya aap sach mein is item ko delete karna chahte hain?')) return;
+
+    try {
+      await API.delete(`/master-dropdowns/${id}`);
+      fetchAllMasters();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete item');
+    }
+  };
+
+  const getCategoryTitle = (catKey) => {
+    switch (catKey) {
+      case 'location': return 'Location';
+      case 'branch': return 'Branch Name';
+      case 'designation': return 'Designation'; // 📌 Title for designation
+      case 'identity': return 'Identity';
+      case 'relation': return 'Relation';
+      case 'purpose': return 'Purpose';
+      case 'reason': return 'Reason';
+      default: return catKey;
+    }
+  };
+
   const renderTableCard = (title, categoryKey, columnName) => {
-    const filteredData = data[categoryKey].filter(item => 
+    const filteredData = (data[categoryKey] || []).filter(item => 
       item.name.toLowerCase().includes((searchQuery[categoryKey] || '').toLowerCase())
     );
 
@@ -115,6 +186,7 @@ const MasterMixedView = () => {
               <tr className="border-b border-slate-100 text-slate-400 uppercase font-semibold">
                 <th className="py-2.5 px-4">{columnName}</th>
                 <th className="py-2.5 px-4">Status</th>
+                <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -127,11 +199,27 @@ const MasterMixedView = () => {
                         {item.status || 'Active'}
                       </span>
                     </td>
+                    <td className="py-2.5 px-4 text-right space-x-2">
+                      <button 
+                        onClick={() => handleOpenEditModal(item, categoryKey)}
+                        className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteItem(item._id)}
+                        className="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="2" className="text-center py-8 text-slate-400 text-xs">
+                  <td colSpan="3" className="text-center py-8 text-slate-400 text-xs">
                     {loading ? 'Loading...' : 'No records found'}
                   </td>
                 </tr>
@@ -153,7 +241,7 @@ const MasterMixedView = () => {
       <div className="bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-slate-800">Mixed List Master Dashboard</h1>
-          <p className="text-xs text-slate-500">Manage identity proofs, relations, purposes, and reason details.</p>
+          <p className="text-xs text-slate-500">Manage locations, branch names, designations, identity proofs, relations, purposes, and reasons.</p>
         </div>
         <span className="px-3 py-1 bg-indigo-50 text-indigo-600 font-semibold text-xs rounded-lg border border-indigo-100">
           ADMIN PANEL
@@ -161,19 +249,22 @@ const MasterMixedView = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {renderTableCard('Location List', 'location', 'Location')}
+        {renderTableCard('Branch Name List', 'branch', 'Branch Name')}
+        {renderTableCard('Designation List', 'designation', 'Designation')} {/* 📌 Added Designation Card */}
         {renderTableCard('Identity Proof Details List', 'identity', 'Identity')}
         {renderTableCard('Relation Details', 'relation', 'Relation')}
         {renderTableCard('Purpose Details', 'purpose', 'Purpose')}
         {renderTableCard('Reason Details', 'reason', 'Reason')}
       </div>
 
-      {/* Modal Dialog Box */}
+      {/* Add Modal Dialog Box */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <h3 className="font-bold text-slate-800 text-sm capitalize">
-                Add New {activeCategory}
+                Add New {getCategoryTitle(activeCategory)}
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -186,13 +277,13 @@ const MasterMixedView = () => {
             <form onSubmit={handleSaveItem} className="p-6 space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-500 uppercase mb-1.5">
-                  {activeCategory} Name <span className="text-rose-500">*</span>
+                  {getCategoryTitle(activeCategory)} Name <span className="text-rose-500">*</span>
                 </label>
                 <input 
                   type="text" 
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder={`Enter ${activeCategory} name...`}
+                  placeholder={`Enter ${getCategoryTitle(activeCategory).toLowerCase()}...`}
                   autoFocus
                   required
                   className="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-indigo-500 text-slate-700 font-medium"
@@ -213,6 +304,59 @@ const MasterMixedView = () => {
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm transition-all disabled:opacity-50"
                 >
                   {submitting ? 'Saving...' : 'Save Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal Dialog Box */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-bold text-slate-800 text-sm capitalize">
+                Edit {getCategoryTitle(editCategory)}
+              </h3>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200/50 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateItem} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-500 uppercase mb-1.5">
+                  {getCategoryTitle(editCategory)} Name <span className="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  value={editItemName}
+                  onChange={(e) => setEditItemName(e.target.value)}
+                  placeholder="Enter updated name..."
+                  autoFocus
+                  required
+                  className="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-indigo-500 text-slate-700 font-medium"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm transition-all disabled:opacity-50"
+                >
+                  {submitting ? 'Updating...' : 'Update Item'}
                 </button>
               </div>
             </form>

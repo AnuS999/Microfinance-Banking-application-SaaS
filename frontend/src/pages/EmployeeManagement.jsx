@@ -10,36 +10,37 @@ const EmployeeManagement = () => {
     password: '',
     role: 'Agent',
     designation: '',
+    branchName: '',
     phoneNumber: '',
     salary: '',
     joiningDate: new Date().toISOString().split('T')[0],
     address: ''
   });
 
-  // Default Microfinance Designations + Fallback list
-  const [designations, setDesignations] = useState([
-    { _id: '1', name: 'Branch Manager' },
-    { _id: '2', name: 'Loan Officer' },
-    { _id: '3', name: 'Field Officer' },
-    { _id: '4', name: 'Cashier' },
-    { _id: '5', name: 'Center Coordinator' },
-    { _id: '6', name: 'Area Manager' }
-  ]);
 
+  const [branches, setBranches] = useState([]);
+    const [designations, setDesignations] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchDesignations = async () => {
+    const fetchDropdowns = async () => {
       try {
-        const res = await API.get('/master-dropdowns?category=designation');
-        if (res.data && res.data.data && res.data.data.length > 0) {
-          setDesignations(res.data.data);
+        const [desRes, branchRes] = await Promise.all([
+          API.get('/master-dropdowns?category=designation').catch(() => ({ data: { data: [] } })),
+          API.get('/master-dropdowns?category=branch').catch(() => ({ data: { data: [] } }))
+        ]);
+
+        if (desRes.data && desRes.data.data && desRes.data.data.length > 0) {
+          setDesignations(desRes.data.data);
+        }
+        if (branchRes.data && branchRes.data.data && branchRes.data.data.length > 0) {
+          setBranches(branchRes.data.data);
         }
       } catch (err) {
-        console.log('Using default microfinance designations list', err);
+        console.log('Error fetching master dropdowns', err);
       }
     };
-    fetchDesignations();
+    fetchDropdowns();
   }, []);
 
   const handleChange = (e) => {
@@ -61,6 +62,7 @@ const EmployeeManagement = () => {
         password: '',
         role: 'Agent',
         designation: '',
+        branchName: '',
         phoneNumber: '',
         salary: '',
         joiningDate: new Date().toISOString().split('T')[0],
@@ -68,7 +70,6 @@ const EmployeeManagement = () => {
       });
     } catch (err) {
       console.error('Error saving employee:', err);
-      // Asli error backend se nikal kar alert me dikhayega
       const errorMsg = err.response?.data?.message || err.message || 'Failed to save employee details';
       alert(`Error: ${errorMsg}`);
     } finally {
@@ -175,6 +176,25 @@ const EmployeeManagement = () => {
               >
                 <option value="">Select Designation</option>
                 {designations.map(item => (
+                  <option key={item._id || item.name} value={item.name}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 📌 Branch Name Dropdown Field Added Here */}
+            <div>
+              <label className="block font-bold text-slate-500 uppercase mb-1.5">Branch Name *</label>
+              <select 
+                name="branchName" 
+                value={formData.branchName} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500"
+              >
+                <option value="">Select Branch</option>
+                {branches.map(item => (
                   <option key={item._id || item.name} value={item.name}>
                     {item.name}
                   </option>

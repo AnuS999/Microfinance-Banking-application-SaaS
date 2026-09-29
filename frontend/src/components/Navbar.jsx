@@ -14,11 +14,14 @@ import {
   FileText,
   IndianRupee,
   Printer,
-  Settings
+  Settings,
+  Database,
+  Briefcase
 } from 'lucide-react';
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -38,7 +41,6 @@ const Navbar = () => {
 
   // Safe Name Extraction with Fallback to Email username if name is missing
   const rawName = currentUser?.fullName || currentUser?.name || currentUser?.user?.name || currentUser?.email?.split('@')[0] || 'User';
-  // Capitalize first letter of email fallback if name was missing
   const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
   
   const avatar = currentUser?.avatar || currentUser?.user?.avatar || '';
@@ -51,9 +53,12 @@ const Navbar = () => {
     { name: 'Loan Tracking', path: '/loans', icon: Landmark, desc: 'Disburse & Collect EMIs' },
     { name: 'Group GRT (KYC)', path: '/group-loan-grt', icon: Users, desc: 'Center KYC & CIBIL Review' },
     { name: 'EMI Collection & Tracking', path: '/emi-collection', icon: IndianRupee, desc: 'Record weekly repayments' },
-    { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' },
-    { name: 'Master Dropdown Settings', path: '/admin/mixed', icon: Settings, desc: 'Manage dropdown fields and options' },
-    { name: 'Employee Management', path: '/admin/employees', icon: Users, desc: 'Manage staff details, salary & designations' }
+    { name: 'LOA Records & Print', path: '/loa-records', icon: Printer, desc: 'Date filter & print loan applications' }
+  ];
+
+  const adminModules = [
+    { name: 'Master Dropdown Settings', path: '/admin/mixed', icon: Database, desc: 'Manage dropdown fields and options' },
+    { name: 'Employee Management', path: '/admin/employees', icon: Briefcase, desc: 'Manage staff details, salary & designations' }
   ];
 
   return (
@@ -76,10 +81,10 @@ const Navbar = () => {
         </Link>
 
         {/* Navigation Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             to="/"
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               location.pathname === '/'
                 ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
                 : 'text-slate-600 hover:bg-slate-50'
@@ -89,7 +94,7 @@ const Navbar = () => {
           </Link>
           <Link 
             to="/member-log" 
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               location.pathname === '/member-log'
                 ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
                 : 'text-slate-600 hover:bg-slate-50'
@@ -99,23 +104,26 @@ const Navbar = () => {
           </Link>
           <Link 
             to="/loan-application-form" 
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               location.pathname === '/loan-application-form'
                 ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
-            <FileText size={16} /> Loan Application (LOA)
+            <FileText size={16} /> Loan App (LOA)
           </Link>
 
           {/* Modules Dropdown */}
           <div className="relative">
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all"
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+                setAdminDropdownOpen(false);
+              }}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all"
             >
               <Users size={16} className="text-slate-500" />
-              <span>Modules & Features</span>
+              <span>Modules</span>
               <ChevronDown size={14} className={`transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -150,11 +158,55 @@ const Navbar = () => {
             )}
           </div>
 
+          {/* Admin & Setup Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setAdminDropdownOpen(!adminDropdownOpen);
+                setDropdownOpen(false);
+              }}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all"
+            >
+              <Settings size={16} className="text-slate-500" />
+              <span>Admin Setup</span>
+              <ChevronDown size={14} className={`transition-transform duration-200 ${adminDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {adminDropdownOpen && (
+              <div 
+                onMouseLeave={() => setAdminDropdownOpen(false)}
+                className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl py-2 z-50"
+              >
+                <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Administration Controls
+                </div>
+                {adminModules.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={`${item.path}-${index}`}
+                      to={item.path}
+                      onClick={() => setAdminDropdownOpen(false)}
+                      className="flex items-start gap-3 px-3 py-2 hover:bg-indigo-50/50 transition-colors"
+                    >
+                      <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                        <Icon size={16} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-slate-800">{item.name}</div>
+                        <div className="text-[10px] text-slate-400">{item.desc}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* User Profile Quick Info & Logout */}
-          <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+          <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
             <Link to="/profile" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
-              {/* Avatar / Photo preview */}
-              <div className="w-9 h-9 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden flex items-center justify-center font-bold text-indigo-700 text-sm">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden flex items-center justify-center font-bold text-indigo-700 text-xs">
                 {avatar ? (
                   <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -162,9 +214,8 @@ const Navbar = () => {
                 )}
               </div>
               
-              {/* User Name Tag */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50/70 text-indigo-700 border border-indigo-100">
-                <ShieldCheck size={13} className="text-indigo-600" />
+              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50/70 text-indigo-700 border border-indigo-100">
+                <ShieldCheck size={12} className="text-indigo-600" />
                 <span>{displayName}</span>
               </div>
             </Link>
@@ -174,7 +225,7 @@ const Navbar = () => {
               title="Logout"
               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
             </button>
           </div>
         </div>

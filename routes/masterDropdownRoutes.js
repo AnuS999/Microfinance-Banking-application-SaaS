@@ -3,7 +3,7 @@ const router = express.Router();
 const MasterDropdown = require('../models/MasterDropdown');
 
 // 1. GET: Saari categories ya specific category ke options fetch karne ke liye
-// Example: /api/master-dropdowns?category=identity
+// Example: /api/master-dropdowns?category=centername
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;

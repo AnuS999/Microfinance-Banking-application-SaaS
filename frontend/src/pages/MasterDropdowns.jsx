@@ -3,21 +3,23 @@ import API from '../api/axiosInstance';
 import { Settings, Plus, CheckCircle, Trash2, Edit3 } from 'lucide-react';
 
 const MasterDropdowns = () => {
-  const [activeTab, setActiveTab] = useState('identity'); // identity, relation, purpose, reason
+  const [activeTab, setActiveTab] = useState('identity'); // identity, relation, purpose, reason, centerName, etc.
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newItemName, setNewItemName] = useState('');
 
-  // Categories list
-const categories = [
-  { key: 'identity', label: 'Identity Proof Details' },
-  { key: 'relation', label: 'Relation Details' },
-  { key: 'purpose', label: 'Purpose Details' },
-  { key: 'reason', label: 'Reason Details' },
-  { key: 'designation', label: 'Employee Designations & Roles' },
-  { key: 'state', label: 'States & State Codes' },
-  { key: 'branch', label: 'Branch Names' }
-];
+  // Categories list (Added Center Names category)
+// Categories list (Center Names ko sabse upar kar diya hai)
+  const categories = [
+    { key: 'centername', label: 'Center Names' },
+    { key: 'identity', label: 'Identity Proof Details' },
+    { key: 'relation', label: 'Relation Details' },
+    { key: 'purpose', label: 'Purpose Details' },
+    { key: 'reason', label: 'Reason Details' },
+    { key: 'designation', label: 'Employee Designations & Roles' },
+    { key: 'state', label: 'States & State Codes' },
+    { key: 'branch', label: 'Branch Names' }
+  ];
 
   // Fetch options based on active tab
   const fetchOptions = async () => {
@@ -56,7 +58,7 @@ const categories = [
     }
   };
 
-  // Toggle status or delete
+  // Delete option
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this option?')) return;
     try {
