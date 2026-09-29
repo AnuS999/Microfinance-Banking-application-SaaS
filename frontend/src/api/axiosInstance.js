@@ -5,7 +5,7 @@ const API = axios.create({
   withCredentials: true,
 });
 
-// Request Interceptor to attach JWT Token safely
+// Request Interceptor to attach JWT Token safely from userInfo storage
 API.interceptors.request.use((config) => {
   try {
     const item = localStorage.getItem('userInfo');

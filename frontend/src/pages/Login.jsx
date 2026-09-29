@@ -14,7 +14,6 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      // Role-based redirection upon successful login
       if (user.role === 'Agent') {
         navigate('/emi-collection');
       } else {
@@ -26,11 +25,11 @@ const Login = () => {
     };
   }, [user, navigate, dispatch]);
 
-const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('🔥 Login Button Clicked! Email:', email, 'Password:', password);
     dispatch(login({ email, password }));
   };
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
@@ -73,7 +72,7 @@ const handleSubmit = (e) => {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.xml ? e.xml : e.target.value)}
                 placeholder="••••••••"
                 className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
@@ -89,7 +88,6 @@ const handleSubmit = (e) => {
           </button>
         </form>
 
-        {/* Note: Public registration link removed to enforce Admin-only profile creation */}
         <div className="text-center text-[11px] text-slate-400 pt-2 border-t border-slate-100">
           Protected System. Contact Admin for login credentials.
         </div>

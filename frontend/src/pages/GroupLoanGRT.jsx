@@ -5,7 +5,7 @@ import { Users, UserPlus, Send, Trash2, Clock, CheckCircle2, XCircle } from 'luc
 
 const GroupLoanGRT = () => {
   const { user } = useSelector((state) => state.auth); // Role: 'ADMIN' or 'AGENT'
-  const isAdmin = user?.role === 'ADMIN';
+ const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
   // Agent Form State
   const [centerName, setCenterName] = useState('');
@@ -348,7 +348,12 @@ const GroupLoanGRT = () => {
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-800">Center: {group.centerNameOrLocation}</h3>
-                    <p className="text-xs text-slate-400">Agent ID: {group.agent?.name || group.agent}</p>
+                    {/* Safe check for Agent object/string */}
+                    <p className="text-xs text-slate-400">
+                      Agent: {typeof group.agent === 'object' 
+                        ? (group.agent?.name || group.agent?.email || 'Unknown Agent') 
+                        : (group.agent || 'Unknown Agent')}
+                    </p>
                   </div>
                   <span className="px-3 py-1 bg-amber-50 text-amber-600 border border-amber-200 rounded-full text-[10px] font-bold">
                     Pending CIBIL Review

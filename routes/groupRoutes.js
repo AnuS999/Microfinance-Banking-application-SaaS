@@ -9,14 +9,12 @@ const {
   getAgentGroups
 } = require('../controllers/groupController');
 
-// Agent Routes
-router.post('/submit-group', protect, submitGroupForApproval);
+// 📌 Agent Routes (Protected + Role Check for Agents)
+router.post('/submit-group', protect, authorize('Agent', 'AGENT', 'agent'), submitGroupForApproval);
+router.get('/agent-groups', protect, authorize('Agent', 'AGENT', 'agent'), getAgentGroups);
 
-// Agent Route to track submitted groups status
-router.get('/agent-groups', protect, getAgentGroups);
-
-// Admin Routes
-router.get('/pending-groups', protect, authorize('ADMIN'), getPendingGroups);
-router.put('/review-group/:applicationId', protect, authorize('ADMIN'), reviewGroupCibil);
+// 📌 Admin Routes (Protected + Role Check for Admins)
+router.get('/pending-groups', protect, authorize('Admin', 'ADMIN', 'admin'), getPendingGroups);
+router.put('/review-group/:applicationId', protect, authorize('Admin', 'ADMIN', 'admin'), reviewGroupCibil);
 
 module.exports = router;
