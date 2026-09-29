@@ -1,37 +1,58 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-// Layout Components
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-
-// Pages
+import ProtectedRoute from './components/ProtectedRoute';
+import GroupLoanGRT from './pages/GroupLoanGRT';
+import MasterDropdowns from './pages/MasterDropdowns';
+// Pages Import
 import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Borrowers from './pages/Borrowers';
+import Loans from './pages/Loans';
+import AmortizationCalc from './pages/AmortizationCalc';
 import AddItem from './pages/AddItem';
-import AmortizationCalculator from './pages/AmortizationCalculator';
-import BorrowerManagement from './pages/BorrowerManagement';
-import LoanManagement from './pages/LoanManagement';
+import LoanApplicationForm from './pages/LoanApplicationForm';
+import MemberLog from './pages/MemberLog';
+import EmiCollection from './pages/EmiCollection';
+import LoaRecords from './pages/LoaRecords';
+import Dashboard from './components/dashboard/Dashboard';
+import MasterMixedView from './pages/MasterMixedView';
+import EmployeeManagement from './pages/EmployeeManagement';
+import Profile from './pages/Profile';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-slate-50">
-        {/* Top Header Navigation with Dropdown */}
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
         <Navbar />
-
-        {/* Main Content Body */}
-        <main className="flex-1 pb-10">
+        <main className="pb-12">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/add" element={<AddItem />} />
-            <Route path="/amortization" element={<AmortizationCalculator />} />
-            <Route path="/borrowers" element={<BorrowerManagement />} />
-            <Route path="/loans" element={<LoanManagement />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected Routes (Accessible by ADMIN and AGENT) */}
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'AGENT']} />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/borrowers" element={<Borrowers />} />
+              <Route path="/loans" element={<Loans />} />
+              <Route path="/amortization" element={<AmortizationCalc />} />
+              <Route path="/add" element={<AddItem />} />
+              <Route path="/group-loan-grt" element={<GroupLoanGRT />} />
+              <Route path="/loan-application-form" element={<LoanApplicationForm />} />
+              <Route path="/member-log" element={<MemberLog />} />
+              <Route path="/emi-collection" element={<EmiCollection />} />
+              <Route path="/loa-records" element={<LoaRecords />} />
+              <Route path="/admin/mixed" element={<MasterMixedView />} />
+             <Route path="/admin/employees" element={<EmployeeManagement />} />
+             <Route path="/profile" element={<Profile />} />
+            </Route>
+
+            {/* Fallback Redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-
-        {/* Bottom Footer */}
-        <Footer />
       </div>
     </Router>
   );

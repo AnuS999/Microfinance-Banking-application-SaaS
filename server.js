@@ -2,7 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const Item = require('./models/Item'); // Mongoose Item Model import karein
+const Item = require('./models/Item');
 
 dotenv.config();
 
@@ -11,8 +11,11 @@ connectDB();
 
 const app = express();
 
-// Global Middlewares
-app.use(cors());
+// Global Middlewares (Updated with CORS credentials support)
+app.use(cors({
+  origin: true, 
+  credentials: true
+}));
 app.use(express.json());
 
 // ==========================================
@@ -73,17 +76,31 @@ app.delete('/api/items/:id', async (req, res, next) => {
 });
 
 // ==========================================
-// OTHER FEATURE ROUTES
+// API FEATURE ROUTES
 // ==========================================
 const authRoutes = require('./routes/authRoutes');
 const borrowerRoutes = require('./routes/borrowerRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const loanRoutes = require('./routes/loanRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const groupRoutes = require('./routes/groupRoutes');
+const loanApplicationRoutes = require('./routes/loanApplicationRoutes');
+const repaymentRoutes = require('./routes/repaymentRoutes');
+const masterDropdownRoutes = require('./routes/masterDropdownRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
+const collectionRoutes = require('./routes/collectionRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/borrowers', borrowerRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/loans', loanRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/loan-applications', loanApplicationRoutes);
+app.use('/api/repayments', repaymentRoutes);
+app.use('/api/master-dropdowns', masterDropdownRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/collections', collectionRoutes);
 
 // Health Check Route
 app.get('/', (req, res) => {
@@ -99,8 +116,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Local development ke liye port listener, Vercel ke liye export
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running in development mode on port ${PORT}`);
+  });
+}
+
+module.exports = app;

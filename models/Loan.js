@@ -9,10 +9,15 @@ const repaymentScheduleSchema = new mongoose.Schema({
   remainingBalance: Number,
   status: {
     type: String,
-    enum: ['PENDING', 'PAID', 'OVERDUE'],
+    enum: ['PENDING', 'PENDING_APPROVAL', 'PAID', 'OVERDUE'],
     default: 'PENDING',
   },
   paidAt: Date,
+  collectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Employee',
+    default: null,
+  },
 });
 
 const loanSchema = new mongoose.Schema(
@@ -21,6 +26,11 @@ const loanSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Borrower',
       required: true,
+    },
+    createdBy: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Employee', 
+      required: true 
     },
     principalAmount: { type: Number, required: true },
     annualInterestRate: { type: Number, required: true },

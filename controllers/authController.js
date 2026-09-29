@@ -1,69 +1,142 @@
+const Employee = require('../models/Employee');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-const register = async (req, res) => {
+// Helper function to generate JWT token
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret_key_12345', {
+    expiresIn: '7d',
+  });
+};
+
+// @desc    Register a new employee / user
+// @route   POST /api/auth/register
+exports.registerUser = async (req, res) => {
+  console.log('========================================');
+  console.log('🚨 REGISTER ROUTE HIT IN authController.js');
+  console.log('Request Body:', req.body);
+  console.log('========================================');
+
   try {
-    const { name, email } = req.body;
+    const { fullName, name, email, password, role, designation, salary, employeeCode, phoneNumber, address } = req.body;
+    const empName = fullName || name;
 
-    if (!email || !name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name and Email are required',
+    if (!empName || !email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide all required fields (fullName, email, password)' 
       });
     }
 
-    const newUserPayload = {
-      _id: '6ab2c9aab69cd8a5cedf3a59',
-      name: name || 'Anurodh Singh',
-      email,
-      tenantId: 'DEFAULT',
-      role: 'ORG_ADMIN',
-    };
-
-    const secretKey = process.env.JWT_SECRET || 'super_secret_jwt_key_2026';
-    const token = jwt.sign(newUserPayload, secretKey, { expiresIn: '7d' });
-
-    return res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      token,
-      user: newUserPayload,
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-const login = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+    const employeeExists = await Employee.findOne({ email });
+    if (employeeExists) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User already exists with this email' 
+      });
     }
 
-    const userPayload = {
-      _id: '6ab2c9aab69cd8a5cedf3a59',
-      name: 'Anurodh Singh',
-      email: 'anurodhsingh955@gmail.com',
-      tenantId: 'DEFAULT',
-      role: 'ORG_ADMIN',
-    };
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const secretKey = process.env.JWT_SECRET || 'super_secret_jwt_key_2026';
-    const token = jwt.sign(userPayload, secretKey, { expiresIn: '7d' });
+    const employee = await Employee.create({
+      fullName: empName,
+      email,
+      password: hashedPassword,
+      role: role || 'Agent',
+      designation: designation || 'Field Officer',
+      salary: salary || 0,
+      employeeCode: employeeCode || `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+      phoneNumber: phoneNumber || '',
+      address: address || ''
+    });
 
-    return res.status(200).json({
+    const token = generateToken(employee._id, employee.role);
+
+    res.status(201).json({
       success: true,
-      message: 'Login successful',
-      token,
-      user: userPayload,
+      message: 'Account created successfully',
+      data: {
+        _id: employee._id,
+        name: employee.fullName,
+        email: employee.email,
+        role: employee.role,
+        designation: employee.designation,
+        token,
+      },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('Registration Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Server error during registration' 
+    });
   }
 };
 
-module.exports = {
-  register,
-  login,
+// @desc    Login employee & get token
+// @route   POST /api/auth/login
+exports.loginUser = async (req, res) => {
+  console.log('========================================');
+  console.log('🚨 LOGIN ROUTE HIT IN authController.js');
+  console.log('Request Body:', req.body);
+  console.log('========================================');
+
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide email and password' 
+      });
+    }
+
+    const employee = await Employee.findOne({ email: email.trim() }).select('+password');
+    console.log("Found Employee in DB:", employee ? employee.email : "Not Found");
+
+    if (!employee) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password (User not found in DB)' 
+      });
+    }
+
+    let isMatch = false;
+    if (employee.password && (employee.password.startsWith('$2a$') || employee.password.startsWith('$2b$'))) {
+      isMatch = await bcrypt.compare(password, employee.password);
+    } else {
+      isMatch = (password === employee.password);
+    }
+
+    console.log("Password Match Status:", isMatch);
+
+    if (!isMatch) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password (Password mismatch)' 
+      });
+    }
+
+    const token = generateToken(employee._id, employee.role);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        _id: employee._id,
+        name: employee.fullName || employee.name,
+        email: employee.email,
+        role: employee.role,
+        designation: employee.designation || 'Field Officer',
+        token,
+      },
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Server error during login' 
+    });
+  }
 };

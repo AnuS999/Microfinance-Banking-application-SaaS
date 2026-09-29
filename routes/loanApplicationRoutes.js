@@ -1,0 +1,16 @@
+const express = require('express');
+const router = express.Router();
+const { protect, authorize } = require('../middleware/authMiddleware');
+const {
+  createLoanApplication,
+  getAllLoanApplications,
+  updateDisbursementStatus,
+} = require('../controllers/loanApplicationController');
+
+router.post('/create', protect, createLoanApplication);
+router.get('/all', protect, getAllLoanApplications);
+
+// Fixed: Removed duplicate route, allowed both uppercase/lowercase roles to prevent 403
+router.put('/status/:id', protect, authorize('admin', 'ADMIN'), updateDisbursementStatus);
+
+module.exports = router;
